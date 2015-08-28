@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 
 // Using the Robocode API that I have imported
 using Robocode;
@@ -23,22 +24,27 @@ namespace JWH
         {
             // -- Initialization of the robot --
 
-            Random random = new Random();
+            //Random random = new Random();
 
             target = new Enemy();
 
             target.distance = 100000;
 
+            //Setting my Colours
+            SetColors(Color.Black, Color.Transparent, Color.Red, Color.Red, Color.PapayaWhip);
+
+            // Allowing my Radar and gun to turn independently from the body
             IsAdjustGunForRobotTurn = true;
             IsAdjustRadarForGunTurn = true;
                       
             SetTurnRadarRightRadians(2 * PI);
 
+            // Main body of my loop
             while (true)
             {
                 doMovement();
-                doFirepower();
                 doScanner();
+                doFirepower();
                 doGun();
                 Fire(firepower);
                 Execute(); 
@@ -52,12 +58,10 @@ namespace JWH
                 firepower = 3.5;
             else if (target.distance < 500)
                 firepower = 2.5;
-            else if (target.distance < 800)
+            else if (target.distance < 700)
                 firepower = 1.5;
             else
                 firepower = 0.5;
-
-            //firepower = 400 / target.distance;
         }
 
         void doMovement()
@@ -65,7 +69,7 @@ namespace JWH
             if (Time % 20 == 0)
             { 		//every twenty 'ticks'
                 direction *= -1;		//reverse direction
-                SetAhead(direction * 700);	//move in that direction
+                SetAhead(direction * 1000);	//move in that direction
             }
             SetTurnRightRadians(target.bearing + (PI / 2)); //every turn move to circle strafe the enemy
         }
@@ -79,7 +83,6 @@ namespace JWH
             }
             else
             {
-
                 //next is the amount we need to rotate the radar by to scan where the target is now
                 radarOffset = RadarHeadingRadians - absbearing(X, Y, target.x, target.y);
                 
@@ -106,7 +109,6 @@ namespace JWH
 
         }
  
-        
         //if a bearing is not within the -pi to pi range, alters it to provide the shortest angle
         double NormaliseBearing(double ang)
         {
@@ -181,28 +183,24 @@ namespace JWH
             }
         }
 
-
-       /* public override void OnScannedRobot(ScannedRobotEvent e)
+        public void onRobotDeath(RobotDeathEvent e)
         {
-            double distance = e.Distance;
-
-
-            if (distance < 200)
-                FireBullet(3.5);
-            else if (distance < 500)
-                FireBullet(2.5);
-            else if (distance < 800)
-                Fire(1.5);
-            else
-                Fire(0.5);
-
-        } */
+            if (e.Name == target.name)
+                target.distance = 100000; //this will effectively make it search for a new target
+        }
 
         public override void OnHitWall(HitWallEvent e)
         {
+            Console.WriteLine("Fucking wall got in Johnny5's way");
+        }
 
-            Console.WriteLine("Ouch that hurt");
-           
+        public void onWin(WinEvent e)
+        {
+            //On win we wish to have a victory dance
+            while (true)
+            {
+                SetTurnRadarLeft(360);
+            }
         }
 
     }
@@ -217,6 +215,7 @@ namespace JWH
         public double speed;
         public double x, y;
         public double distance;
+
         public double guessX(long when)
         {
             long diff = when - ctime;
