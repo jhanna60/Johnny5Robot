@@ -8,12 +8,13 @@ using System.Drawing;
 
 // Using the Robocode API that I have imported
 using Robocode;
+using Robocode.Util;
 
 namespace JWH
 {
     class Johnny5 : AdvancedRobot
     {
-        Enemy target;
+        Opponent target;
         double PI = Math.PI;
         int direction = 1;
         double firepower;
@@ -24,9 +25,7 @@ namespace JWH
         {
             // -- Initialization of the robot --
 
-            //Random random = new Random();
-
-            target = new Enemy();
+            target = new Opponent();
 
             target.distance = 100000;
 
@@ -54,14 +53,8 @@ namespace JWH
 
         void doFirepower()
         {
-            if (target.distance < 200)
-                firepower = 3.5;
-            else if (target.distance < 500)
-                firepower = 2.5;
-            else if (target.distance < 700)
-                firepower = 1.5;
-            else
-                firepower = 0.5;
+            //Equation to work out power of bullet
+            firepower = (Math.Min(400 / target.getDistance(), 3));
         }
 
         void doMovement()
@@ -69,7 +62,7 @@ namespace JWH
             if (Time % 20 == 0)
             { 		//every twenty 'ticks'
                 direction *= -1;		//reverse direction
-                SetAhead(direction * 1000);	//move in that direction
+                SetAhead(direction * 700);	//move in that direction
             }
             SetTurnRightRadians(target.bearing + (PI / 2)); //every turn move to circle strafe the enemy
         }
@@ -77,7 +70,8 @@ namespace JWH
         void doScanner()
         {
             double radarOffset;
-            if (Time - target.ctime > 4)
+
+            if ((Time - target.ctime) > 4)
             { 	//if we haven't seen anybody for a bit....
                 radarOffset = 360;		//rotate the radar to find a target
             }
@@ -103,8 +97,10 @@ namespace JWH
             //this is the best estimation we have
             long time = Time + (int)(target.distance / (20 - (3 * firepower)));
 
-            //offsets the gun by the angle to the next shot based on linear targeting provided by the enemy class
+            //Going to implement a different way to shoot based on how successful our hits have been
+            //offsets the gun by the angle to the next shot based on linear targeting provided by the opponent class
             double gunOffset = GunHeadingRadians - absbearing(X, Y, target.guessX(time), target.guessY(time));
+            //double gunOffset = GunHeadingRadians - absbearing(X, Y, target.x, target.y);
             SetTurnGunLeftRadians(NormaliseBearing(gunOffset));
 
         }
@@ -138,7 +134,7 @@ namespace JWH
             return h;
         }
 
-        //gets the absolute bearing between to x,y coordinates
+        //gets the absolute bearing between two x,y coordinates
         public double absbearing(double x1, double y1, double x2, double y2)
         {
             double xo = x2 - x1;
@@ -163,9 +159,13 @@ namespace JWH
             return 0;
         }
 
+
+        // Event handling system below
+
         public override void OnScannedRobot(ScannedRobotEvent e)
         {
             //if we have found a closer robot....
+
             if ((e.Distance < target.distance) || (target.name == e.Name))
             {
                 //the next line gets the absolute bearing to the point where the bot is
@@ -183,49 +183,25 @@ namespace JWH
             }
         }
 
-        public void onRobotDeath(RobotDeathEvent e)
+        public override void OnRobotDeath(RobotDeathEvent e)
         {
             if (e.Name == target.name)
-                target.distance = 100000; //this will effectively make it search for a new target
+            {
+                target.distance = 10000; //this will effectively make it search for a new target
+            }
         }
+
 
         public override void OnHitWall(HitWallEvent e)
         {
             Console.WriteLine("Fucking wall got in Johnny5's way");
         }
 
-        public void onWin(WinEvent e)
+        public override void OnWin(WinEvent e)
         {
             //On win we wish to have a victory dance
-            while (true)
-            {
-                SetTurnRadarLeft(360);
-            }
-        }
-
-    }
-
-    public class Enemy
-    {
-        //Enemy class
-        public String name;
-        public double bearing;
-        public double head;
-        public long ctime;
-        public double speed;
-        public double x, y;
-        public double distance;
-
-        public double guessX(long when)
-        {
-            long diff = when - ctime;
-            return x + Math.Sin(head) * speed * diff;
-        }
-        public double guessY(long when)
-        {
-            long diff = when - ctime;
-            return y + Math.Cos(head) * speed * diff;
+            //SetTurnRadarLeft(360);
+            Console.WriteLine("I am the best!");
         }
     }
-
 }
