@@ -19,11 +19,20 @@ namespace JWH
         int direction = 1;
         double firepower;
 
+        int direction1 = 1;
+
+        List<WaveBullet> waves = new List<WaveBullet>();
+
+        static int[] stats = new int[31]; // 31 is the number of unique GuessFactors we're using
+                                          // Note: this must be odd number so we can get
+                                          // GuessFactor 0 at middle.
 
         // The main method of my robot containing robot logics
         public override void Run()
         {
             // -- Initialization of the robot --
+            //for (var i = 0; i < stats.Length; i++)
+            //    stats[i] = new int[31];
 
             target = new Opponent();
 
@@ -43,9 +52,9 @@ namespace JWH
             {
                 doMovement();
                 doScanner();
-                doFirepower();
-                doGun();
-                Fire(firepower);
+                //doFirepower();
+                //doGun();
+                //Fire(firepower);
                 Execute(); 
             }
         }
@@ -167,7 +176,7 @@ namespace JWH
                 //the next line gets the absolute bearing to the point where the bot is
                 double absbearing_rad = (HeadingRadians + e.BearingRadians) % (2 * PI);
                 //this section sets all the information about our target
-               
+
                 target.name = e.Name;
                 target.x = X + Math.Sin(absbearing_rad) * e.Distance; //works out the x coordinate of where the target is
                 target.y = Y + Math.Cos(absbearing_rad) * e.Distance; //works out the y coordinate of where the target is
@@ -176,6 +185,67 @@ namespace JWH
                 target.ctime = Time;				//game time at which this scan was produced
                 target.speed = e.Velocity;
                 target.distance = e.Distance;
+
+
+                // Enemy absolute bearing, you can use your one if you already declare it.
+
+                firepower = (Math.Min(400 / target.getDistance(), 3));
+
+                Console.WriteLine("Firepower = {0}",firepower);
+
+                double absBearing = HeadingRadians + target.bearing;
+
+                // find our enemy's location:
+                double ex = target.x;
+                double ey = target.y;
+
+                // Let's process the waves now:
+                for (int i = 0; i < waves.Count; i++)
+                {
+                    WaveBullet currentWave = (WaveBullet)waves.ElementAt(i);
+                    if (currentWave.checkHit(ex, ey, Time))
+                    {
+                        waves.Remove(currentWave);
+                        i--;
+                    }
+                }
+
+                //double power = Math.Min(3, Math.Max(.1, firepower));
+
+                // don't try to figure out the direction they're moving 
+                // if they're not moving, just use the direction we had before
+                if (target.speed != 0)
+                {
+                    if (Math.Sin(target.head - absBearing) * target.speed < 0)
+                        direction1 = -1;
+                    else
+                        direction1 = 1;
+                }
+
+                int[] currentStats = stats;
+
+                WaveBullet newWave = new WaveBullet(X, Y, absBearing, firepower,
+                                direction1, Time, currentStats);
+
+                int bestindex = 15; // initialize it to be in the middle, guessfactor 0.
+                for (int i = 0; i < 31; i++)
+                    if (currentStats[bestindex] < currentStats[i])
+                        bestindex = i;
+
+                // this should do the opposite of the math in the WaveBullet:
+                double guessfactor = (double)(bestindex - (stats.Length - 1) / 2)
+                                / ((stats.Length - 1) / 2);
+                double angleOffset = direction1 * guessfactor * newWave.maxEscapeAngle();
+
+                double gunAdjust = Utils.NormalRelativeAngle(
+                        absBearing - GunHeadingRadians + angleOffset);
+                SetTurnGunRightRadians(gunAdjust);
+
+                if (GunHeat == 0 && gunAdjust < Math.Atan2(9, target.distance) && SetFireBullet(firepower) != null)
+                {
+                    if (SetFireBullet(firepower) != null)
+                        waves.Add(newWave);
+                }
             }
         }
 
