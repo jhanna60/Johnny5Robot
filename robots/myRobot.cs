@@ -48,7 +48,6 @@ namespace JWH
                 Fire(firepower);
                 Execute(); 
             }
-
         }
 
         void doFirepower()
@@ -94,15 +93,12 @@ namespace JWH
         void doGun()
         {
             //works out how long it would take a bullet to travel to where the enemy is *now*
-            //this is the best estimation we have
             long time = Time + (int)(target.distance / (20 - (3 * firepower)));
 
-            //Going to implement a different way to shoot based on how successful our hits have been
             //offsets the gun by the angle to the next shot based on linear targeting provided by the opponent class
             double gunOffset = GunHeadingRadians - absbearing(X, Y, target.guessX(time), target.guessY(time));
             //double gunOffset = GunHeadingRadians - absbearing(X, Y, target.x, target.y);
             SetTurnGunLeftRadians(NormaliseBearing(gunOffset));
-
         }
  
         //if a bearing is not within the -pi to pi range, alters it to provide the shortest angle
@@ -187,10 +183,9 @@ namespace JWH
         {
             if (e.Name == target.name)
             {
-                target.distance = 10000; //this will effectively make it search for a new target
+                target.distance = 10000; //this will effectively make us search for a new target
             }
         }
-
 
         public override void OnHitWall(HitWallEvent e)
         {
@@ -199,8 +194,6 @@ namespace JWH
 
         public override void OnWin(WinEvent e)
         {
-            //On win we wish to have a victory dance
-            //SetTurnRadarLeft(360);
             Console.WriteLine("I am the best!");
         }
     }
