@@ -23,16 +23,19 @@ namespace JWH
 
         List<WaveBullet> waves = new List<WaveBullet>();
 
-        static int[] stats = new int[31]; // 31 is the number of unique GuessFactors we're using
-                                          // Note: this must be odd number so we can get
-                                          // GuessFactor 0 at middle.
+        //static int[] stats = new int[31]; // 31 is the number of unique GuessFactors we're using
+        // Note: this must be odd number so we can get
+        // GuessFactor 0 at middle.
+
+        int[][] stats = new int[13][];
 
         // The main method of my robot containing robot logics
         public override void Run()
         {
             // -- Initialization of the robot --
-            //for (var i = 0; i < stats.Length; i++)
-            //    stats[i] = new int[31];
+
+            for (var i = 0; i < stats.Length; i++)
+                stats[i] = new int[31];
 
             target = new Opponent();
 
@@ -222,7 +225,11 @@ namespace JWH
                         direction1 = 1;
                 }
 
-                int[] currentStats = stats;
+                int[] currentStats = stats[(int)(target.distance / 100)];
+
+                Console.WriteLine("int array = {0}",((int)(target.distance / 100)));
+
+                //int[] currentStats = stats;
 
                 WaveBullet newWave = new WaveBullet(X, Y, absBearing, firepower,
                                 direction1, Time, currentStats);
