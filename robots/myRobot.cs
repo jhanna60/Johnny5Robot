@@ -23,19 +23,20 @@ namespace JWH
 
         List<WaveBullet> waves = new List<WaveBullet>();
 
-        //static int[] stats = new int[31]; // 31 is the number of unique GuessFactors we're using
         // Note: this must be odd number so we can get
         // GuessFactor 0 at middle.
 
-        int[][] stats = new int[13][];
+        static int[] stats = new int[31]; // 31 is the number of unique GuessFactors we're using
+        //int[,] stats = new int[13,31];
+
 
         // The main method of my robot containing robot logics
         public override void Run()
         {
             // -- Initialization of the robot --
 
-            for (var i = 0; i < stats.Length; i++)
-                stats[i] = new int[31];
+            //for (var i = 0; i < stats.Length; i++)
+            //    stats[i] = new int[31];
 
             target = new Opponent();
 
@@ -55,17 +56,8 @@ namespace JWH
             {
                 doMovement();
                 doScanner();
-                //doFirepower();
-                //doGun();
-                //Fire(firepower);
                 Execute(); 
             }
-        }
-
-        void doFirepower()
-        {
-            //Equation to work out power of bullet
-            firepower = (Math.Min(400 / target.getDistance(), 3));
         }
 
         void doMovement()
@@ -101,17 +93,6 @@ namespace JWH
             //turn the radar
             SetTurnRadarLeftRadians(NormaliseBearing(radarOffset));
         }
-
-        void doGun()
-        {
-            //works out how long it would take a bullet to travel to where the enemy is *now*
-            long time = Time + (int)(target.distance / (20 - (3 * firepower)));
-
-            //offsets the gun by the angle to the next shot based on linear targeting provided by the opponent class
-            double gunOffset = GunHeadingRadians - absbearing(X, Y, target.guessX(time), target.guessY(time));
-            //double gunOffset = GunHeadingRadians - absbearing(X, Y, target.x, target.y);
-            SetTurnGunLeftRadians(NormaliseBearing(gunOffset));
-        }
  
         //if a bearing is not within the -pi to pi range, alters it to provide the shortest angle
         double NormaliseBearing(double ang)
@@ -119,16 +100,6 @@ namespace JWH
             if (ang > PI)
                 ang -= 2 * PI;
             if (ang < -PI)
-                ang += 2 * PI;
-            return ang;
-        }
-
-        //if a heading is not within the 0 to 2pi range, alters it to provide the shortest angle
-        double NormaliseHeading(double ang)
-        {
-            if (ang > 2 * PI)
-                ang -= 2 * PI;
-            if (ang < 0)
                 ang += 2 * PI;
             return ang;
         }
@@ -185,22 +156,23 @@ namespace JWH
                 target.y = Y + Math.Cos(absbearing_rad) * e.Distance; //works out the y coordinate of where the target is
                 target.bearing = e.BearingRadians;
                 target.head = e.HeadingRadians;
-                target.ctime = Time;				//game time at which this scan was produced
+                //target.ctime = Time;
+                target.ctime = e.Time;				//game time at which this scan was produced
                 target.speed = e.Velocity;
                 target.distance = e.Distance;
 
 
                 // Enemy absolute bearing, you can use your one if you already declare it.
 
-                firepower = (Math.Min(400 / target.getDistance(), 3));
-
-                Console.WriteLine("Firepower = {0}",firepower);
+                firepower = (Math.Min(500 / target.getDistance(), 3));
 
                 double absBearing = HeadingRadians + target.bearing;
 
                 // find our enemy's location:
                 double ex = target.x;
                 double ey = target.y;
+
+                Console.WriteLine("number of waves {0} ", waves.Count);
 
                 // Let's process the waves now:
                 for (int i = 0; i < waves.Count; i++)
@@ -225,11 +197,17 @@ namespace JWH
                         direction1 = 1;
                 }
 
-                int[] currentStats = stats[(int)(target.distance / 100)];
+                //int[] currentStats = stats[target.distance / 100];
 
-                Console.WriteLine("int array = {0}",((int)(target.distance / 100)));
+                int[] currentStats = stats;
 
-                //int[] currentStats = stats;
+                //foreach (var i in currentStats)
+                //{
+                //    Console.WriteLine("Current stats array element {0} = {1} ",i ,currentStats[i]);
+                //}
+
+                //Console.WriteLine("int array = {0}",((int)(target.distance / 100)));
+
 
                 WaveBullet newWave = new WaveBullet(X, Y, absBearing, firepower,
                                 direction1, Time, currentStats);
@@ -248,9 +226,15 @@ namespace JWH
                         absBearing - GunHeadingRadians + angleOffset);
                 SetTurnGunRightRadians(gunAdjust);
 
+                //if (SetFireBullet(firepower) != null)
+                //{
+                //    Console.WriteLine("inside the waves.add");
+                //    waves.Add(newWave);
+                //}
+
                 if (GunHeat == 0 && gunAdjust < Math.Atan2(9, target.distance) && SetFireBullet(firepower) != null)
                 {
-                    if (SetFireBullet(firepower) != null)
+                        Console.WriteLine("inside the waves.add");
                         waves.Add(newWave);
                 }
             }

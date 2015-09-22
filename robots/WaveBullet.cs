@@ -59,9 +59,14 @@ namespace JWH
 
         public static double GetDistanceBetweenPoints(double x, double y, double ex, double ey)
         {
-            double a = x - ex;
-            double b = y - ey;
-            double distance = Math.Sqrt(a * a + b * b);
+            double distance = Math.Sqrt(Math.Pow(x - ex, 2) + Math.Pow(y - ey, 2));
+            //return Math.Sqrt(distanceSq(x1, y1, x2, y2));
+            //double a = x - ex;
+            //double b = y - ey;
+            //double distance = Math.Sqrt(a * a + b * b);
+
+            //Console.WriteLine("Distance : {0} ", distance);
+
             return distance;
         }
     }
