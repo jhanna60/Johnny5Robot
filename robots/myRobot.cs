@@ -164,7 +164,9 @@ namespace JWH
 
                 // Enemy absolute bearing, you can use your one if you already declare it.
 
-                firepower = (Math.Min(500 / target.getDistance(), 3));
+                firepower = (Math.Min(700 / target.getDistance(), 3));
+
+                //Console.WriteLine("Firepower = " + firepower);
 
                 double absBearing = HeadingRadians + target.bearing;
 
@@ -172,7 +174,7 @@ namespace JWH
                 double ex = target.x;
                 double ey = target.y;
 
-                Console.WriteLine("number of waves {0} ", waves.Count);
+                //Console.WriteLine("number of waves {0} ", waves.Count);
 
                 // Let's process the waves now:
                 for (int i = 0; i < waves.Count; i++)
@@ -201,13 +203,6 @@ namespace JWH
 
                 int[] currentStats = stats;
 
-                //foreach (var i in currentStats)
-                //{
-                //    Console.WriteLine("Current stats array element {0} = {1} ",i ,currentStats[i]);
-                //}
-
-                //Console.WriteLine("int array = {0}",((int)(target.distance / 100)));
-
 
                 WaveBullet newWave = new WaveBullet(X, Y, absBearing, firepower,
                                 direction1, Time, currentStats);
@@ -216,6 +211,7 @@ namespace JWH
                 for (int i = 0; i < 31; i++)
                     if (currentStats[bestindex] < currentStats[i])
                         bestindex = i;
+
 
                 // this should do the opposite of the math in the WaveBullet:
                 double guessfactor = (double)(bestindex - (stats.Length - 1) / 2)
